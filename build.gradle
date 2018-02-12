@@ -1,0 +1,42 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+}
+
+repositories {
+    jcenter()
+}
+
+assert hasProperty('javaHome'): "Set the property 'javaHome' in your your gradle.properties pointing to a Java 6 or 7 installation"
+assert hasProperty('targetJavaVersion'): "Set the property 'targetJavaVersion' in your your gradle.properties to '1.6' or '1.7'"
+
+sourceCompatibility = targetJavaVersion
+
+def javaExecutablesPath = new File(javaHome, 'bin')
+def javaExecutables = [:].withDefault { execName ->
+    def executable = new File(javaExecutablesPath, execName)
+    assert executable.exists(): "There is no ${execName} executable in ${javaExecutablesPath}"
+    executable
+}
+tasks.withType(AbstractCompile) {
+    options.with {
+        fork = true
+        forkOptions.javaHome = file(javaHome)
+    }
+}
+tasks.withType(Javadoc) {
+    executable = javaExecutables["javadoc.exe"]
+}
+tasks.withType(Test) {
+    executable = javaExecutables["java.exe"]
+}
+tasks.withType(JavaExec) {
+    executable = javaExecutables["java.exe"]
+}
+
+println "状態の確認"
+println "org.gradle.java.home: " + getProperty("org.gradle.java.home")
+println "javaHome: " + getProperty("javaHome")
